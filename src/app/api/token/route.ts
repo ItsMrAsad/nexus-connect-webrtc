@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const token = await at.toJwt();
-    return NextResponse.json({ token });
+    return NextResponse.json({ token, serverUrl: wsUrl });
   } catch (error) {
     console.error('Error generating token:', error);
     return NextResponse.json({ error: 'Failed to generate token' }, { status: 500 });

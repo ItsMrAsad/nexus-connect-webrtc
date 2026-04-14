@@ -12,6 +12,7 @@ import { ActiveRoom } from './ActiveRoom';
 
 export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: string, initialUsername: string, initialRole: string }) {
   const [token, setToken] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [role, setRole] = useState(initialRole);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: s
         const data = await res.json();
         if (data.token) {
           setToken(data.token);
+          setServerUrl(data.serverUrl);
         }
       } catch (e) {
         console.error(e);
@@ -32,10 +34,11 @@ export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: s
 
   const handleApproved = () => {
     setToken(null); // Unmount room temporarily to drop the bad token
+    setServerUrl(null);
     setRole('guest'); // Fetch new token with guest permissions
   };
 
-  if (!token) return (
+  if (!token || !serverUrl) return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950">
       <div className="relative flex items-center justify-center w-16 h-16">
         <div className="absolute inset-0 rounded-full border-t-4 border-blue-500 animate-spin"></div>
@@ -49,7 +52,7 @@ export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: s
       video={role !== 'waiting'}
       audio={role !== 'waiting'}
       token={token}
-      serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+      serverUrl={serverUrl}
       data-lk-theme="default"
       style={{ height: '100dvh' }}
       connectOptions={{ autoSubscribe: role !== 'waiting' }}
