@@ -11,37 +11,57 @@ import { Video } from 'lucide-react';
 import { WaitingLobby } from './WaitingLobby';
 import { ActiveRoom } from './ActiveRoom';
 
-export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: string; initialUsername: string; initialRole: string }) {
-  const [token, setToken] = useState<string | null>(null);
-  const [serverUrl, setServerUrl] = useState<string | null>(null);
-  const [role, setRole] = useState(initialRole);
+interface LiveKitWrapperProps {
+  room: string;
+  initialUsername: string;
+  initialRole: string;
+  initialToken: string;
+  initialServerUrl: string;
+}
 
+export function LiveKitWrapper({
+  room,
+  initialUsername,
+  initialRole,
+  initialToken,
+  initialServerUrl,
+}: LiveKitWrapperProps) {
+  // Start with server-provided token — no initial fetch needed
+  const [token, setToken] = useState<string>(initialToken);
+  const [serverUrl, setServerUrl] = useState<string>(initialServerUrl);
+  const [role, setRole] = useState(initialRole);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+
+  // Only fetch a new token when the role changes (e.g. waiting → guest after approval)
   useEffect(() => {
-    const fetchToken = async (currentRole: string) => {
+    if (role === initialRole) return; // Skip initial — already have token from server
+
+    setIsReconnecting(true);
+    const fetchToken = async () => {
       try {
-        const res = await fetch(`/api/token?room=${room}&username=${initialUsername}&role=${currentRole}`);
+        const res = await fetch(`/api/token?room=${room}&username=${initialUsername}&role=${role}`);
         const data = await res.json();
         if (data.token) {
           setToken(data.token);
           setServerUrl(data.serverUrl);
         }
       } catch (e) {
-        console.error(e);
+        console.error('Failed to fetch token:', e);
+      } finally {
+        setIsReconnecting(false);
       }
     };
 
-    fetchToken(role);
-  }, [room, initialUsername, role]);
+    fetchToken();
+  }, [room, initialUsername, role, initialRole]);
 
   const handleApproved = () => {
-    setToken(null);
-    setServerUrl(null);
-    setRole('guest');
+    setRole('guest'); // Triggers useEffect to fetch new token with guest permissions
   };
 
-  if (!token || !serverUrl) return (
+  // Loading state — only shows briefly during role upgrade (waiting → guest)
+  if (isReconnecting) return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[var(--background)] gap-5">
-      {/* Branded Loading State */}
       <div className="relative flex items-center justify-center w-20 h-20">
         <div className="absolute inset-0 rounded-full border-2 border-slate-800" />
         <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin-slow" />
@@ -54,7 +74,7 @@ export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: s
         <p className="text-sm font-semibold text-white tracking-tight">
           Nexus<span className="text-indigo-400">Connect</span>
         </p>
-        <p className="text-xs text-slate-500 mt-1">Establishing connection…</p>
+        <p className="text-xs text-slate-500 mt-1">Upgrading connection…</p>
       </div>
     </div>
   );
