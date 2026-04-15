@@ -6,11 +6,12 @@ import {
   RoomAudioRenderer,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
+import { Video } from 'lucide-react';
 
 import { WaitingLobby } from './WaitingLobby';
 import { ActiveRoom } from './ActiveRoom';
 
-export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: string, initialUsername: string, initialRole: string }) {
+export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: string; initialUsername: string; initialRole: string }) {
   const [token, setToken] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [role, setRole] = useState(initialRole);
@@ -33,16 +34,27 @@ export function LiveKitWrapper({ room, initialUsername, initialRole }: { room: s
   }, [room, initialUsername, role]);
 
   const handleApproved = () => {
-    setToken(null); // Unmount room temporarily to drop the bad token
+    setToken(null);
     setServerUrl(null);
-    setRole('guest'); // Fetch new token with guest permissions
+    setRole('guest');
   };
 
   if (!token || !serverUrl) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950">
-      <div className="relative flex items-center justify-center w-16 h-16">
-        <div className="absolute inset-0 rounded-full border-t-4 border-blue-500 animate-spin"></div>
-        <div className="absolute inset-2 rounded-full border-r-4 border-emerald-500 animate-spin opacity-70" style={{ animationDirection: 'reverse', animationDuration: '1.2s' }}></div>
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[var(--background)] gap-5">
+      {/* Branded Loading State */}
+      <div className="relative flex items-center justify-center w-20 h-20">
+        <div className="absolute inset-0 rounded-full border-2 border-slate-800" />
+        <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin-slow" />
+        <div className="absolute inset-2 rounded-full border-r-2 border-violet-500/40 animate-spin-reverse" />
+        <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <Video className="w-5 h-5 text-white" />
+        </div>
+      </div>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-white tracking-tight">
+          Nexus<span className="text-indigo-400">Connect</span>
+        </p>
+        <p className="text-xs text-slate-500 mt-1">Establishing connection…</p>
       </div>
     </div>
   );

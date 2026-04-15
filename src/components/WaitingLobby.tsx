@@ -1,9 +1,19 @@
-import { useEffect } from 'react';
-import { useRoomContext } from '@livekit/components-react';
-import { Loader2, ShieldAlert } from 'lucide-react';
+'use client';
 
-export function WaitingLobby({ username, onApproved }: { username: string, onApproved: () => void }) {
+import { useEffect, useState } from 'react';
+import { useRoomContext } from '@livekit/components-react';
+import { Loader2, Shield, Wifi } from 'lucide-react';
+
+export function WaitingLobby({ username, onApproved }: { username: string; onApproved: () => void }) {
   const room = useRoomContext();
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? '' : prev + '.'));
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     const requestJoin = () => {
@@ -28,7 +38,7 @@ export function WaitingLobby({ username, onApproved }: { username: string, onApp
         // ignore parse error
       }
     };
-    
+
     room.on('dataReceived', handleDataReceived);
     return () => {
       clearInterval(interval);
@@ -36,31 +46,68 @@ export function WaitingLobby({ username, onApproved }: { username: string, onApp
     };
   }, [room, username, onApproved]);
 
-  return (
-    <div className="flex flex-col items-center justify-center h-[100dvh] w-full bg-[#0a0a0a] text-zinc-100 px-4 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-[40vw] h-[40vw] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
-      <div className="absolute bottom-1/4 right-1/4 w-[40vw] h-[40vw] bg-fuchsia-600/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
+  const initials = username
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
-      <div className="z-10 max-w-md w-full p-8 border border-white/10 bg-zinc-950/50 backdrop-blur-xl rounded-3xl flex flex-col items-center gap-6 shadow-2xl text-center">
-        
-        <div className="relative flex items-center justify-center w-24 h-24 mb-2">
-          <div className="absolute inset-0 rounded-full border-[3px] border-zinc-800" />
-          <div className="absolute inset-0 rounded-full border-t-[3px] border-indigo-500 animate-spin" />
-          <ShieldAlert className="w-8 h-8 text-indigo-400" />
+  return (
+    <div className="flex flex-col items-center justify-center h-[100dvh] w-full bg-[var(--background)] text-slate-100 px-4 relative overflow-hidden">
+
+      {/* Ambient Background */}
+      <div className="absolute inset-0 bg-grid pointer-events-none" />
+      <div className="absolute top-[15%] left-[15%] w-[45vw] h-[45vw] max-w-[500px] max-h-[500px] bg-indigo-600/[0.06] rounded-full blur-[120px] pointer-events-none animate-float" />
+      <div className="absolute bottom-[15%] right-[15%] w-[40vw] h-[40vw] max-w-[450px] max-h-[450px] bg-violet-600/[0.05] rounded-full blur-[120px] pointer-events-none animate-float-reverse" />
+
+      {/* Card */}
+      <div className="z-10 max-w-md w-full p-8 glass glow-accent rounded-3xl flex flex-col items-center gap-7 text-center animate-fade-in-up">
+
+        {/* Avatar with Spinner Ring */}
+        <div className="relative flex items-center justify-center w-28 h-28">
+          {/* Outer ring - static */}
+          <div className="absolute inset-0 rounded-full border-2 border-slate-800" />
+          {/* Spinning accent ring */}
+          <div className="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin-slow" />
+          {/* Second ring - reverse spin */}
+          <div className="absolute inset-2 rounded-full border-r-2 border-violet-500/50 animate-spin-reverse" />
+          {/* Pulse rings */}
+          <div className="absolute inset-[-8px] rounded-full border border-indigo-500/20 animate-ring-pulse" />
+          <div className="absolute inset-[-16px] rounded-full border border-indigo-500/10 animate-ring-pulse" style={{ animationDelay: '0.5s' }} />
+
+          {/* Avatar */}
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <span className="text-xl font-bold text-white">{initials}</span>
+          </div>
         </div>
 
-        <div className="space-y-3">
+        {/* Text */}
+        <div className="space-y-2">
           <h2 className="text-2xl font-bold tracking-tight text-white">
             Waiting for Host
           </h2>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            Welcome <span className="text-zinc-200 font-semibold">{username}</span>. You are in the lobby. The host has been notified and must admit you to join the session.
+          <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+            Hi <span className="text-white font-semibold">{username}</span>! You&apos;re in the lobby. The host will admit you shortly.
           </p>
         </div>
 
-        <div className="w-full flex items-center justify-center gap-2 text-xs font-medium text-indigo-400 bg-indigo-500/10 py-2.5 px-4 rounded-lg mt-2">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          Requesting access...
+        {/* Status Badges */}
+        <div className="w-full flex flex-col gap-2.5">
+          <div className="flex items-center justify-center gap-2.5 text-xs font-medium text-indigo-300 bg-indigo-500/[0.08] py-2.5 px-4 rounded-xl border border-indigo-500/10">
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            Requesting access{dots}
+          </div>
+          <div className="flex items-center justify-between text-xs text-slate-500 px-1">
+            <div className="flex items-center gap-1.5">
+              <Wifi className="w-3 h-3 text-emerald-500" />
+              <span className="text-emerald-400">Connected</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Shield className="w-3 h-3" />
+              <span>Encrypted</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
