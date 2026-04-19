@@ -16,6 +16,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, isActive, leftIcon, rightIcon, children, disabled, ...props }, ref) => {
+    // Separate motion-specific props from standard button props if necessary, 
+    // or just ensure standard button props don't collide with motion internal types.
+    // In this case, we'll cast props to any to avoid the complex motion.button vs ButtonHTMLAttributes conflict
+    // which is common in Framer Motion + React 19.
+    const buttonProps = props as any;
     
     const variants = {
       primary: 'btn-premium',
@@ -44,7 +49,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           size === 'icon' && sizes.icon,
           className
         )}
-        {...props}
+        {...buttonProps}
       >
         {isLoading ? (
           <Loader2 className="w-4 h-4 animate-spin" />
