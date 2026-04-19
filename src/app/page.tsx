@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, Video, User, Hash, Zap, Sparkles, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/Button';
 
 function HomeContent() {
   const router = useRouter();
@@ -205,48 +206,41 @@ function HomeContent() {
             )}
 
             {/* Submit */}
-            <button
+            <Button
               id="join-button"
               type="submit"
-              disabled={isLoading || !username || !room}
-              className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3 px-4 rounded-xl transition-all shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/30 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 mt-1 relative overflow-hidden group"
+              isLoading={isLoading}
+              disabled={!username || !room}
+              className="w-full h-14 mt-2"
+              rightIcon={!isLoading && <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />}
             >
-              <AnimatePresence mode="wait">
-                {isLoading ? (
-                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  </motion.div>
-                ) : (
-                  <motion.div key="text" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                    {isInvite ? 'Join Meeting' : 'Enter Room'}
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
+              {isInvite ? 'Join Meeting' : 'Enter Room'}
+            </Button>
 
             {/* Divider + Random */}
             {!isInvite && (
               <>
                 <div className="relative py-1 flex items-center">
                   <div className="flex-grow border-t border-white/[0.06]" />
-                  <span className="flex-shrink-0 mx-4 text-[10px] text-slate-500 uppercase tracking-widest font-medium">
+                  <span className="flex-shrink-0 mx-4 text-[10px] text-slate-500 uppercase tracking-widest font-black">
                     or
                   </span>
                   <div className="flex-grow border-t border-white/[0.06]" />
                 </div>
 
-                <button
+                <Button
                   id="generate-room-button"
                   type="button"
+                  variant="glass"
                   onClick={generateRandom}
-                  className="w-full bg-slate-900/60 hover:bg-slate-800/80 text-slate-300 hover:text-white font-medium py-3 px-4 rounded-xl transition-all border border-white/[0.06] hover:border-white/[0.1] flex justify-center items-center gap-2 active:scale-[0.98]"
+                  className="w-full h-14 font-bold tracking-tight"
+                  leftIcon={<Zap className="w-4 h-4 text-indigo-400" />}
                 >
-                  <Zap className="w-4 h-4 text-indigo-400" />
                   Create Instant Room
-                </button>
+                </Button>
               </>
             )}
+
           </form>
         </motion.div>
       </div>

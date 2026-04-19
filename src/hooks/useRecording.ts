@@ -25,10 +25,42 @@ export function useRecording() {
     setError(null);
     try {
       // Ask the user to share their screen (tab, window, or entire screen)
-      const stream = await navigator.mediaDevices.getDisplayMedia({
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: 30 },
         audio: true,
       });
+      
+      let voiceStream: MediaStream | null = null;
+      try {
+        voiceStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+      } catch (err) {
+        console.warn('Microphone access denied or unavailable', err);
+      }
+
+      const audioContext = new AudioContext();
+      const dest = audioContext.createMediaStreamDestination();
+      let hasAudio = false;
+
+      if (displayStream.getAudioTracks().length > 0) {
+        const displayAudioSource = audioContext.createMediaStreamSource(displayStream);
+        displayAudioSource.connect(dest);
+        hasAudio = true;
+      }
+
+      if (voiceStream && voiceStream.getAudioTracks().length > 0) {
+        const voiceAudioSource = audioContext.createMediaStreamSource(voiceStream);
+        voiceAudioSource.connect(dest);
+        hasAudio = true;
+      }
+
+      const tracks = [...displayStream.getVideoTracks()];
+      if (hasAudio) {
+        tracks.push(...dest.stream.getAudioTracks());
+      }
+
+      const stream = new MediaStream(tracks);
       streamRef.current = stream;
       chunksRef.current = [];
 
@@ -57,14 +89,16 @@ export function useRecording() {
         URL.revokeObjectURL(url);
 
         // Cleanup stream tracks
-        streamRef.current?.getTracks().forEach((t) => t.stop());
+        displayStream.getTracks().forEach((t) => t.stop());
+        voiceStream?.getTracks().forEach((t) => t.stop());
+        audioContext.close();
         streamRef.current = null;
         setState('idle');
         setDuration(0);
       };
 
       // If user stops sharing via browser's built-in stop button
-      stream.getVideoTracks()[0].addEventListener('ended', () => {
+      displayStream.getVideoTracks()[0].addEventListener('ended', () => {
         stopRecording();
       });
 

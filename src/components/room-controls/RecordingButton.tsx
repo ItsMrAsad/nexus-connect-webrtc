@@ -2,6 +2,7 @@
 
 import { useRecording } from '@/hooks/useRecording';
 import { Circle, Square, StopCircle } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 export function RecordingButton() {
   const {
@@ -14,46 +15,54 @@ export function RecordingButton() {
   } = useRecording();
 
   return (
-    <>
+    <div className="relative">
       {!isRecording && !isStopping ? (
-        <button
+        <Button
           id="start-recording"
           onClick={startRecording}
-          title="Start screen recording"
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg active:scale-95 bg-slate-950/80 backdrop-blur-xl border border-white/[0.06] text-slate-300 hover:text-red-400 hover:border-red-500/30 hover:bg-slate-900/80 shadow-black/20"
+          variant="glass"
+          className="w-full flex-col h-24 gap-3 border-dashed hover:border-indigo-500/50 hover:bg-indigo-500/5 group"
+          leftIcon={<Circle className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />}
         >
-          <Circle className="w-4 h-4" />
-          <span className="hidden sm:inline">Record</span>
-        </button>
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 group-hover:text-indigo-300 transition-colors">Start Recording</span>
+        </Button>
       ) : isStopping ? (
-        <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold bg-slate-950/80 border border-white/[0.06] text-slate-400 backdrop-blur-xl shadow-lg shadow-black/20">
-          <Square className="w-3.5 h-3.5 animate-pulse" />
-          <span className="hidden sm:inline">Saving…</span>
-        </div>
+        <Button
+          disabled
+          variant="glass"
+          className="w-full flex-col h-24 gap-3 opacity-70"
+          leftIcon={<Square className="w-5 h-5 animate-pulse text-indigo-400" />}
+        >
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Saving...</span>
+        </Button>
       ) : (
-        /* Recording active — pulsing red indicator + stop button */
-        <button
+        <Button
           id="stop-recording"
           onClick={stopRecording}
-          title="Stop recording and download"
-          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg active:scale-95 bg-red-600/90 hover:bg-red-500 text-white border border-red-500/30 backdrop-blur-xl shadow-red-900/30"
+          variant="danger"
+          className="w-full flex-col h-24 gap-2 shadow-lg shadow-red-500/20"
         >
-          {/* Pulsing red dot */}
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
-          </span>
-          <span className="font-mono font-bold">{duration}</span>
-          <StopCircle className="w-4 h-4" />
-        </button>
+          <div className="flex items-center gap-2 mb-1">
+             <span className="relative flex h-2 w-2">
+               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+             </span>
+             <span className="text-xs font-black font-mono tracking-tighter">{duration}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <StopCircle className="w-4 h-4" />
+            <span className="text-[10px] font-black uppercase tracking-widest">Stop Session</span>
+          </div>
+        </Button>
       )}
 
       {/* Recording error toast */}
       {recordingError && (
-        <div className="px-3 py-2 rounded-xl text-xs font-medium bg-red-900/60 border border-red-500/20 text-red-300 max-w-[200px] text-center">
+        <div className="absolute -top-12 left-0 right-0 px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-tight bg-red-950/80 border border-red-500/20 text-red-400 text-center backdrop-blur-md animate-fade-in-up">
           {recordingError}
         </div>
       )}
-    </>
+    </div>
   );
 }
+

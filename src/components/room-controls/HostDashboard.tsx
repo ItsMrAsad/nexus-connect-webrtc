@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRoomContext } from '@livekit/components-react';
-import { Users, UserPlus, CheckCircle2, PanelLeftClose, PanelLeftOpen, Copy, Check } from 'lucide-react';
+import { UserPlus, CheckCircle2, Copy, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { Button } from '../ui/Button';
 
 export function HostDashboard() {
   const room = useRoomContext();
   const [waitingUsers, setWaitingUsers] = useState<string[]>([]);
   const [copied, setCopied] = useState(false);
-  const [panelOpen, setPanelOpen] = useState(true);
 
   useEffect(() => {
     const handleDataReceived = (payload: Uint8Array) => {
@@ -46,131 +47,75 @@ export function HostDashboard() {
   };
 
   return (
-    <>
-      {/* Toggle Button — always visible */}
-      <button
-        id="toggle-dashboard"
-        onClick={() => setPanelOpen(prev => !prev)}
+    <div className="flex flex-col gap-6">
+      {/* Copy Invite Link */}
+      <Button
+        variant="glass"
+        onClick={copyInviteLink}
         className={cn(
-          'absolute top-4 left-4 z-[60] h-10 w-10 rounded-xl flex items-center justify-center transition-all',
-          'bg-slate-950/80 backdrop-blur-xl border border-white/[0.06] hover:border-indigo-500/30 hover:bg-slate-900/80',
-          'shadow-lg shadow-black/20',
-          panelOpen && 'left-[calc(min(100vw-2rem,320px)+2rem)]'
+          "w-full justify-start text-[10px] font-black uppercase tracking-[0.1em]",
+          copied && "text-emerald-400 border-emerald-500/30 bg-emerald-500/5"
         )}
-        title={panelOpen ? 'Collapse panel' : 'Expand panel'}
+        leftIcon={copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       >
-        {panelOpen
-          ? <PanelLeftClose className="w-4.5 h-4.5 text-slate-300" />
-          : <PanelLeftOpen className="w-4.5 h-4.5 text-slate-300" />
-        }
-        {/* Notification dot */}
-        {!panelOpen && waitingUsers.length > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-            <span className="relative inline-flex items-center justify-center rounded-full h-4 w-4 bg-indigo-500 text-[9px] font-bold text-white">
-              {waitingUsers.length}
-            </span>
-          </span>
-        )}
-      </button>
+        {copied ? 'Link Copied!' : 'Copy Meeting Link'}
+      </Button>
 
-      {/* Dashboard Panel */}
-      <div
-        className={cn(
-          'absolute top-4 left-4 z-50 w-[calc(100vw-2rem)] sm:w-80 transition-all duration-300 ease-in-out',
-          panelOpen
-            ? 'opacity-100 translate-x-0 pointer-events-auto'
-            : 'opacity-0 -translate-x-4 pointer-events-none'
-        )}
-      >
-        <div className="glass glow-accent rounded-2xl p-5 flex flex-col gap-4 shadow-2xl">
+      {/* List Container */}
+      <div className="flex flex-col gap-3">
+        {waitingUsers.length > 0 ? (
+          waitingUsers.map(user => {
+            const initials = user
+              .split(' ')
+              .map(w => w[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2);
 
-          {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
-            <h3 className="text-sm font-semibold text-white flex items-center gap-2.5">
-              <div className="relative flex items-center justify-center h-7 w-7 rounded-lg bg-indigo-500/15 border border-indigo-500/20">
-                <Users className="w-3.5 h-3.5 text-indigo-400" />
-                {waitingUsers.length > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-60" />
-                    <span className="relative inline-flex items-center justify-center rounded-full h-4 w-4 bg-indigo-500 text-[9px] font-bold text-white">
-                      {waitingUsers.length}
-                    </span>
-                  </span>
-                )}
-              </div>
-              Host Dashboard
-            </h3>
-            <span className="text-[11px] font-medium px-2.5 py-1 bg-slate-900/80 border border-white/[0.06] text-slate-400 rounded-full">
-              {waitingUsers.length} waiting
-            </span>
-          </div>
-
-          {/* Copy Invite */}
-          <button
-            id="copy-invite-link"
-            onClick={copyInviteLink}
-            className={cn(
-              'w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-all text-sm font-medium',
-              copied
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                : 'bg-slate-900/60 hover:bg-slate-800/80 border-white/[0.06] hover:border-indigo-500/20 text-slate-300 hover:text-white'
-            )}
-          >
-            {copied ? (
-              <><Check className="w-4 h-4" />Copied!</>
-            ) : (
-              <><Copy className="w-4 h-4" />Copy Invite Link</>
-            )}
-          </button>
-
-          {/* Waiting Users List */}
-          {waitingUsers.length > 0 && (
-            <div className="max-h-[35vh] overflow-y-auto flex flex-col gap-2.5 pr-1">
-              {waitingUsers.map(user => {
-                const initials = user
-                  .split(' ')
-                  .map(w => w[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2);
-
-                return (
-                  <div
-                    key={user}
-                    className="bg-slate-900/40 hover:bg-slate-900/70 transition-colors p-3 rounded-xl flex items-center justify-between gap-3 border border-white/[0.04]"
-                  >
-                    <div className="flex items-center gap-3 truncate">
-                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-500/20 flex items-center justify-center border border-indigo-500/15 flex-shrink-0">
-                        <span className="text-xs font-bold text-indigo-300">{initials}</span>
-                      </div>
-                      <div className="truncate">
-                        <span className="text-slate-200 truncate font-medium text-sm block">{user}</span>
-                        <span className="text-[11px] text-slate-500">Requesting to join</span>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => admitUser(user)}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-md shadow-indigo-500/15 flex items-center gap-1.5 whitespace-nowrap active:scale-95"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Admit
-                    </button>
+            return (
+              <motion.div
+                key={user}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="group relative bg-white/[0.02] hover:bg-white/[0.04] border border-white/[0.05] p-3.5 rounded-2xl transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-gradient-to-br from-indigo-500/10 to-violet-500/10 flex items-center justify-center border border-white/5 flex-shrink-0">
+                    <span className="text-[11px] font-bold text-indigo-300">{initials}</span>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <div className="flex-1 min-w-0">
+                    <span className="text-sm font-semibold text-slate-200 block truncate leading-tight">{user}</span>
+                    <span className="text-[10px] text-slate-500 uppercase font-black tracking-tight mt-0.5">Wants to join</span>
+                  </div>
+                </div>
 
-          {/* Empty State */}
-          {waitingUsers.length === 0 && (
-            <div className="text-center py-4">
-              <UserPlus className="w-8 h-8 text-slate-700 mx-auto mb-2" />
-              <p className="text-xs text-slate-500">No one is waiting to join</p>
+                <div className="mt-4">
+                  <Button
+                    size="sm"
+                    className="w-full py-2 h-auto text-[11px] font-bold uppercase tracking-wider"
+                    onClick={() => admitUser(user)}
+                    leftIcon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                  >
+                    Admit Participant
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-4 rounded-[2rem] border border-dashed border-white/5 opacity-40">
+            <div className="h-10 w-10 rounded-full bg-slate-900 flex items-center justify-center mb-4">
+              <UserPlus className="w-4 h-4 text-slate-600" />
             </div>
-          )}
-        </div>
+             <p className="text-[11px] font-semibold text-slate-500 text-center leading-relaxed">
+               Lobby is currently empty.<br/>
+               Waiting for participants...
+             </p>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }
+
+

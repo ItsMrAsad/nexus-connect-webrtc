@@ -5,6 +5,7 @@ import { useRoomContext } from '@livekit/components-react';
 import { PenLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Whiteboard } from './Whiteboard';
+import { Button } from '../ui/Button';
 
 export function WhiteboardManager({ isHost }: { isHost: boolean }) {
   const room = useRoomContext();
@@ -50,23 +51,28 @@ export function WhiteboardManager({ isHost }: { isHost: boolean }) {
   return (
     <>
       {isHost && (
-        <button
+        <Button
           id="toggle-whiteboard"
           onClick={handleToggleWhiteboard}
-          title="Open shared whiteboard"
+          isActive={showWhiteboard}
+          variant="glass"
           className={cn(
-            'flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all shadow-lg active:scale-95',
-            showWhiteboard
-              ? 'bg-indigo-600 text-white shadow-indigo-500/30 hover:bg-indigo-500'
-              : 'bg-slate-950/80 backdrop-blur-xl border border-white/[0.06] text-slate-300 hover:text-white hover:border-indigo-500/30 hover:bg-slate-900/80 shadow-black/20'
+            "w-full flex-col h-24 gap-3 border-dashed hover:border-indigo-500/50 hover:bg-indigo-500/5 group",
+            showWhiteboard && "border-indigo-500/50 bg-indigo-500/10"
           )}
+          leftIcon={<PenLine className={cn("w-5 h-5 transition-transform group-hover:scale-110", showWhiteboard ? "text-indigo-400" : "text-slate-500")} />}
         >
-          <PenLine className="w-4 h-4" />
-          <span className="hidden sm:inline">Whiteboard</span>
-        </button>
+          <span className={cn(
+            "text-[10px] font-black uppercase tracking-widest transition-colors",
+            showWhiteboard ? "text-indigo-300" : "text-slate-500 group-hover:text-indigo-300"
+          )}>
+            {showWhiteboard ? 'Hide Whiteboard' : 'Open Whiteboard'}
+          </span>
+        </Button>
       )}
 
       {showWhiteboard && <Whiteboard onClose={handleCloseWhiteboard} isHost={isHost} />}
     </>
   );
 }
+

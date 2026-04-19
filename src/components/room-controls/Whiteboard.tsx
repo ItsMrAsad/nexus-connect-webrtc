@@ -5,6 +5,7 @@ import { Tldraw, createTLStore, TLStore, TLRecord, defaultShapeUtils, defaultBin
 import 'tldraw/tldraw.css';
 import { useRoomContext } from '@livekit/components-react';
 import { X } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 const DATA_TOPIC = 'WHITEBOARD_SYNC';
 const BATCH_DELAY_MS = 120; // throttle: send at most once per 120ms (reduces network jitter)
@@ -137,14 +138,15 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
         </div>
 
         {isHost && (
-          <button
+          <Button
             id="whiteboard-close"
             onClick={onClose}
-            className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all"
+            size="icon"
+            variant="ghost"
             title="Close whiteboard (Esc)"
           >
-            <X className="w-4 h-4" />
-          </button>
+            <X className="w-5 h-5" />
+          </Button>
         )}
       </div>
 
