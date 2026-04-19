@@ -85,9 +85,22 @@ export function LiveKitWrapper({
       audio={role !== 'waiting'}
       token={token}
       serverUrl={serverUrl}
+      connect={true}
       data-lk-theme="default"
       style={{ height: '100dvh' }}
       connectOptions={{ autoSubscribe: role !== 'waiting' }}
+      options={{
+        publishDefaults: {
+          screenShareEncoding: {
+            maxBitrate: 3_000_000,
+            maxFramerate: 30,
+          },
+          videoEncoding: {
+            maxBitrate: 1_500_000,
+            maxFramerate: 30,
+          }
+        }
+      }}
     >
       {role === 'waiting' ? (
         <WaitingLobby username={initialUsername} onApproved={handleApproved} />
