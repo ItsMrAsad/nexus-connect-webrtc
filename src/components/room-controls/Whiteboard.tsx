@@ -72,6 +72,9 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
         isApplyingRemoteRef.current = true;
 
         storeRef.current?.mergeRemoteChanges(() => {
+          const currentStore = storeRef.current;
+          if (!currentStore) return;
+
           const { added, updated, removed } = msg.changes as {
             added?: Record<string, TLRecord>;
             updated?: Record<string, [TLRecord, TLRecord]>;
@@ -79,15 +82,15 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
           };
 
           if (added && Object.keys(added).length > 0) {
-            store.put(Object.values(added));
+            currentStore.put(Object.values(added));
           }
           if (updated && Object.keys(updated).length > 0) {
             // Each entry is [prev, next] — we want the next value
-            store.put(Object.values(updated).map(([, next]) => next));
+            currentStore.put(Object.values(updated).map(([, next]) => next));
           }
           if (removed && Object.keys(removed).length > 0) {
-            // store.remove takes record IDs
-            store.remove(Object.keys(removed) as TLRecord['id'][]);
+            // currentStore.remove takes record IDs
+            currentStore.remove(Object.keys(removed) as TLRecord['id'][]);
           }
         });
 
