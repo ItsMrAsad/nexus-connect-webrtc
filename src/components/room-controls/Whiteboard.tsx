@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef, useState } from 'react';
-import { Tldraw, createTLStore, TLStore, TLRecord } from 'tldraw';
+import { Tldraw, createTLStore, TLStore, TLRecord, defaultShapeUtils, defaultBindingUtils } from 'tldraw';
 import 'tldraw/tldraw.css';
 import { useRoomContext } from '@livekit/components-react';
 import { X } from 'lucide-react';
@@ -17,9 +17,14 @@ interface WhiteboardProps {
 export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
   const room = useRoomContext();
 
-  // Capture Tldraw's internally initialized store (which correctly has all default shapes loaded).
-  // Creating an external store without shapeUtils causes Tldraw to crash when using tools.
-  const storeRef = useRef<TLStore | null>(null);
+  // Stable TLStore initialized with default utilities to prevent crashes on interaction.
+  // We use useState with a lazy initializer to ensure it's created only once.
+  const [store] = useState(() => 
+    createTLStore({ 
+      shapeUtils: defaultShapeUtils,
+      bindingUtils: defaultBindingUtils 
+    })
+  );
 
   // Throttle refs
   const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,10 +76,7 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
 
         isApplyingRemoteRef.current = true;
 
-        storeRef.current?.mergeRemoteChanges(() => {
-          const currentStore = storeRef.current;
-          if (!currentStore) return;
-
+        store.mergeRemoteChanges(() => {
           const { added, updated, removed } = msg.changes as {
             added?: Record<string, TLRecord>;
             updated?: Record<string, [TLRecord, TLRecord]>;
@@ -82,15 +84,15 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
           };
 
           if (added && Object.keys(added).length > 0) {
-            currentStore.put(Object.values(added));
+            store.put(Object.values(added));
           }
           if (updated && Object.keys(updated).length > 0) {
             // Each entry is [prev, next] — we want the next value
-            currentStore.put(Object.values(updated).map(([, next]) => next));
+            store.put(Object.values(updated).map(([, next]) => next));
           }
           if (removed && Object.keys(removed).length > 0) {
-            // currentStore.remove takes record IDs
-            currentStore.remove(Object.keys(removed) as TLRecord['id'][]);
+            // store.remove takes record IDs
+            store.remove(Object.keys(removed) as TLRecord['id'][]);
           }
         });
 
@@ -149,9 +151,9 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
       {/* ── Tldraw Canvas ── */}
       <div className="flex-1 relative">
         <Tldraw
+          store={store}
           hideUi={!isHost}
           onMount={(editor) => {
-            storeRef.current = editor.store;
             if (!isHost) {
               editor.updateInstanceState({ isReadonly: true });
               return;
