@@ -17,8 +17,9 @@ interface WhiteboardProps {
 export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
   const room = useRoomContext();
 
-  // Persistent TLStore — created ONLY ONCE via lazy initialization to prevent massive memory leak/freezing
-  const [store] = useState(() => createTLStore());
+  // Capture Tldraw's internally initialized store (which correctly has all default shapes loaded).
+  // Creating an external store without shapeUtils causes Tldraw to crash when using tools.
+  const storeRef = useRef<TLStore | null>(null);
 
   // Throttle refs
   const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -70,7 +71,7 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
 
         isApplyingRemoteRef.current = true;
 
-        store.mergeRemoteChanges(() => {
+        storeRef.current?.mergeRemoteChanges(() => {
           const { added, updated, removed } = msg.changes as {
             added?: Record<string, TLRecord>;
             updated?: Record<string, [TLRecord, TLRecord]>;
@@ -145,9 +146,9 @@ export function Whiteboard({ onClose, isHost }: WhiteboardProps) {
       {/* ── Tldraw Canvas ── */}
       <div className="flex-1 relative">
         <Tldraw
-          store={store}
           hideUi={!isHost}
           onMount={(editor) => {
+            storeRef.current = editor.store;
             if (!isHost) {
               editor.updateInstanceState({ isReadonly: true });
               return;
